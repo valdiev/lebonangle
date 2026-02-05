@@ -19,29 +19,34 @@ enum Role {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  role Role @default(USER)
-  ads   Ad[]
-  favorites Favorite[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int        @id @default(autoincrement())
+  email         String     @unique
+  name          String?
+  role          Role       @default(USER)
+  ads           Ad[]
+  favorites     Favorite[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  emailVerified Boolean    @default(false)
+  image         String?
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
 }
 
 model Ad {
-  id    Int     @id @default(autoincrement())
-  title String
+  id          Int     @id @default(autoincrement())
+  title       String
   description String?
-  price Int
-  images Image[]
-  published Boolean @default(false)
-  
-  userId Int
-  user User @relation(fields: [userId], references: [id])
+  price       Int
+  images      Image[]
+  published   Boolean @default(false)
+  userId      Int
+  user        User    @relation(fields: [userId], references: [id])
 
   categoryId Int
-  category Category @relation(fields: [categoryId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
 
   favorites Favorite[]
 
@@ -50,24 +55,72 @@ model Ad {
 }
 
 model Image {
-  id    Int     @id @default(autoincrement())
-  url String
+  id   Int    @id @default(autoincrement())
+  url  String
   adId Int
-  ad Ad @relation(fields: [adId], references: [id])
+  ad   Ad     @relation(fields: [adId], references: [id])
 }
 
 model Category {
-  id    Int     @id @default(autoincrement())
+  id   Int    @id @default(autoincrement())
   name String
-  ads Ad[]
+  ads  Ad[]
 }
 
 model Favorite {
   userId Int
-  adId Int
+  adId   Int
 
   user User @relation(fields: [userId], references: [id])
-  ad Ad @relation(fields: [adId], references: [id])
+  ad   Ad   @relation(fields: [adId], references: [id])
 
   @@id([userId, adId])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                Int
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
